@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useState} from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 // import Detail from "./pages/Detail";
 import NoMatch from "./pages/NoMatch";
@@ -14,26 +14,28 @@ import Personality from "./pages/admin/Personality";
 import Home from "./pages/Home";
 import PersonalityLand from "./pages/PersonalityLand";
 
+
 function App() {
+  const [auth, setAuth] = useState({auth: false});
   return (
     <Router>
       <div>
         <Switch>
           <Route path="/admin" component={AdminNav} />
           <Route path="/login" />
-          <Route path="/" component={Nav} />
+          <Route path="/" render={() => <Nav auth={auth} />} />
         </Switch>
         <Switch>
           <Route exact path="/" component={Home} />
           <Route exact path="/quiz" component={Quiz} />
           <Route exact path="/admin/questions" component={AdminQuestions} />
-          <Route exact path="/login" component={Login} />
+          <Route exact path="/login" render={() => <Login setAuth={setAuth} />} />
           <Route exact path="/admin/questions" component={AdminQuestions} />
           <Route exact path="/admin/questions/:id" component={AdminAnswers} />
           <Route exact path="/admin/personality/" component={Personality} />
           <Route exact path="/admin/users" component={Users} />
           <Route exact path="/admin" component={Admin} />
-          <Route exact path="/personality/:type" component={PersonalityLand} />
+          <Route exact path="/personality/:type" render={({match}) => <PersonalityLand auth={auth} match={match} />} />
           <Route component={NoMatch} />
         </Switch>
       </div>

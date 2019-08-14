@@ -2,6 +2,10 @@ import React, { Component } from "react";
 import { Input, FormBtn } from "../../components/Form";
 import API from "../../utils/API";
 import "./Login.css";
+import { Link, Redirect } from "react-router-dom";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { set } from "mongoose";
 
 class Login extends Component {
   state = {
@@ -10,12 +14,25 @@ class Login extends Component {
     zipcode: 0,
     password: "",
     fb_id: "",
-    showModal: false
+    showModal: false,
+    loggedIn: false
   };
 
   loginUser = event => {
     event.preventDefault();
-    console.log("I will log you in (but not really...)");
+    API.signIn({email: this.state.email, password: this.state.password})
+      .then(res => {
+        console.log(res);
+        if(res.data.status === 200){
+          toast.success("Welcome back, " + res.data.name + "!");
+          this.props.setAuth({name: res.data.name, auth: true, zipcode: res.data.zipcode});
+          setTimeout(() => this.setState({loggedIn: true}), 2000);
+        } else if (res.data.status === 400) {
+          toast.error("Hmmm... something wasn't correct. Try again.");
+        }
+        toast.update(res.statusText);
+      })
+      .catch(err => toast.error("Houston, we have a problem ", err.message));
   };
 
   showCreateModal = event => {
@@ -37,7 +54,12 @@ class Login extends Component {
         zipcode: this.state.zipcode,
         password: this.state.password,
         fb_id: this.state.fb_id
-      });
+      })
+      .then(res => {
+        toast.success("Created New User");
+        this.setState({showModal: false});
+      })
+      .catch(err => toast.error(err.message));
     }
   };
 
@@ -49,21 +71,34 @@ class Login extends Component {
   };
 
   render() {
+    if(this.state.loggedIn === true) {
+      return <Redirect to='/' />
+    }
+
     return (
       <>
-        <form onSubmit={this.loginUser}>
-          <label>Name:</label>
-          <Input onChange={this.handleInputChange} type="text" name="name" />
-          <label>Password:</label>
-          <Input
-            onChange={this.handleInputChange}
-            type="password"
-            name="password"
-          />
-          <FormBtn type="submit">Login</FormBtn>
-        </form>
-        <FormBtn onClick={this.showCreateModal}>Create New User</FormBtn>
-
+        
+        <ToastContainer />
+        <div className="login-div">
+          <Link to="/">
+            <img
+              id="coolHog"
+              src="https://maxrelax.s3.amazonaws.com/gifs/coolHog.png"
+            />
+          </Link>
+          <form onSubmit={this.loginUser}>
+            <label>Email:</label>
+            <Input onChange={this.handleInputChange} type="text" name="email" />
+            <label>Password:</label>
+            <Input
+              onChange={this.handleInputChange}
+              type="password"
+              name="password"
+            />
+            <FormBtn type="submit">Login</FormBtn>
+          </form>
+          <FormBtn onClick={this.showCreateModal}>Create New User</FormBtn>
+        </div>
         <div
           className={
             this.state.showModal
